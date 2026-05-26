@@ -1,0 +1,27 @@
+# Maven 
+target/
+*.class
+*.jar
+*.war
+*.ear
+dist/
+
+# NetBeans
+nbproject/private/
+build/
+*.nbattrs
+*~
+
+# Runtime data (важно!)
+server_data/
+*.log
+logs/
+
+# IDE settings (опционально)
+.idea/
+*.iml
+.netbeans/
+
+# OS files
+.DS_Store
+Thumbs.db
