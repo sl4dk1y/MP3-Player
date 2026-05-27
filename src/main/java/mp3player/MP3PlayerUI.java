@@ -144,7 +144,7 @@ public class MP3PlayerUI extends JFrame {
         searchPanel.add(searchButton);
         
         JPanel volumePanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 5));
-        volumePanel.add(new JLabel(""));
+        volumePanel.add(new JLabel("🔉"));
         volumeSlider = new JSlider(JSlider.HORIZONTAL, 0, 100, 70);
         volumeSlider.setPreferredSize(new Dimension(120, 25));
         volumePanel.add(volumeSlider);
