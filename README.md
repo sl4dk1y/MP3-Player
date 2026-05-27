@@ -30,7 +30,7 @@ MP3-player/
 ├── src/
 │   └── main/
 │       └── java/
-│           ├── mp3player/                 # 🎨 Модуль клиента (UI, плеер)
+│           ├── mp3player/                 #  Модуль клиента (UI, плеер)
 │           │   ├── client/                #  HTTP-клиент для общения с сервером
 │           │   │   └── ServerClient.java
 │           │   ├── DisplayScreen.java     #  Экран плеера
