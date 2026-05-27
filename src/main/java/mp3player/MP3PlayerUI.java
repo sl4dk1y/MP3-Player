@@ -27,6 +27,7 @@ public class MP3PlayerUI extends JFrame {
     private JList<String> playlistList;
     private JLabel nowPlayingLabel;
     private JLabel progressLabel;
+    private JLabel topTimeLabel;  
     private JSlider volumeSlider;
     private JProgressBar progressBar;
     private JButton playButton;
@@ -99,8 +100,10 @@ public class MP3PlayerUI extends JFrame {
         nowPlayingLabel.setForeground(new Color(0, 100, 0));
         topPanel.add(nowPlayingLabel, BorderLayout.CENTER);
 
-        progressLabel = new JLabel("0:00 / 0:00", SwingConstants.CENTER);
-        topPanel.add(progressLabel, BorderLayout.SOUTH);
+        // Создаём ОТДЕЛЬНУЮ метку для верхней панели
+        topTimeLabel = new JLabel("0:00 / 0:00", SwingConstants.CENTER);
+        topTimeLabel.setFont(new Font("Arial", Font.PLAIN, 12));
+        topPanel.add(topTimeLabel, BorderLayout.SOUTH);
 
         mainPanel.add(topPanel, BorderLayout.NORTH);
 
@@ -274,9 +277,12 @@ public class MP3PlayerUI extends JFrame {
             @Override
             public void onProgressChanged(int progress, int duration) {
                 SwingUtilities.invokeLater(() -> {
-                    if (progressBar != null && progressLabel != null && duration > 0) {
+                    if (progressBar != null && progressLabel != null && topTimeLabel != null && duration > 0) {
+                        String timeText = formatTime(progress) + " / " + formatTime(duration);
+
                         progressBar.setValue(progress);
-                        progressLabel.setText(formatTime(progress) + " / " + formatTime(duration));
+                        progressLabel.setText(timeText);  // Нижняя метка
+                        topTimeLabel.setText(timeText);   // Верхняя метка
                     }
                 });
             }
