@@ -21,13 +21,13 @@ import java.util.List;
 public class MP3PlayerUI extends JFrame {
     
     private MusicPlayer musicPlayer;
-    private List<Song> playlist;  // Локальный плейлист (песни)
+    private List<Song> playlist;
     private DefaultListModel<String> playlistModel;
     
     private JList<String> playlistList;
     private JLabel nowPlayingLabel;
     private JLabel progressLabel;
-    private JLabel topTimeLabel;  
+    private JLabel topTimeLabel;
     private JSlider volumeSlider;
     private JProgressBar progressBar;
     private JButton playButton;
@@ -69,6 +69,9 @@ public class MP3PlayerUI extends JFrame {
     private JButton downloadPlaylistButton;
     private JButton addSongToPlaylistButton;
     
+    // === Обложка альбома ===
+    private JLabel albumCoverLabel;
+    
     private int currentSongIndex = -1;
     private Timer progressTimer;
     
@@ -87,127 +90,118 @@ public class MP3PlayerUI extends JFrame {
         setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         setSize(1200, 750);
         setLocationRelativeTo(null);
-
+        
         JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
         mainPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
-
-        // Верхняя панель
+        
+        // === Верхняя панель: Сейчас играет ===
         JPanel topPanel = new JPanel(new BorderLayout());
         topPanel.setBorder(new TitledBorder("Сейчас играет"));
-
+        
         nowPlayingLabel = new JLabel("Нет трека", SwingConstants.CENTER);
         nowPlayingLabel.setFont(new Font("Arial", Font.BOLD, 16));
         nowPlayingLabel.setForeground(new Color(0, 100, 0));
         topPanel.add(nowPlayingLabel, BorderLayout.CENTER);
-
-        // Создаём ОТДЕЛЬНУЮ метку для верхней панели
+        
         topTimeLabel = new JLabel("0:00 / 0:00", SwingConstants.CENTER);
         topTimeLabel.setFont(new Font("Arial", Font.PLAIN, 12));
         topPanel.add(topTimeLabel, BorderLayout.SOUTH);
-
+        
         mainPanel.add(topPanel, BorderLayout.NORTH);
-
-        // Центральная панель (плейлист)
+        
+        // === Центральная область: Плейлист ===
         JPanel centerPanel = new JPanel(new BorderLayout());
         centerPanel.setBorder(new TitledBorder("Локальный плейлист"));
-
+        
         playlistModel = new DefaultListModel<>();
         playlistList = new JList<>(playlistModel);
         playlistList.setFont(new Font("Monospaced", Font.PLAIN, 12));
         JScrollPane scrollPane = new JScrollPane(playlistList);
         centerPanel.add(scrollPane, BorderLayout.CENTER);
-
+        
         JPanel playlistControlPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         addSongButton = new JButton("➕ Добавить трек");
         removeSongButton = new JButton("❌ Удалить");
         playlistControlPanel.add(addSongButton);
         playlistControlPanel.add(removeSongButton);
         centerPanel.add(playlistControlPanel, BorderLayout.SOUTH);
-
+        
         mainPanel.add(centerPanel, BorderLayout.CENTER);
-
-        // Нижняя панель (3 строки)
-        JPanel bottomPanel = new JPanel(new GridLayout(3, 1, 5, 10));
-        bottomPanel.setBorder(new EmptyBorder(10, 0, 10, 0));
-
-        // === Строка 1: Поиск и громкость ===
+        
+        // === Нижняя панель: Поиск, прогресс, кнопки ===
+        JPanel bottomPanel = new JPanel(new GridLayout(3, 1, 5, 8));
+        bottomPanel.setBorder(new EmptyBorder(5, 0, 0, 0));
+        
+        // Строка 1: Поиск и громкость
         JPanel topControlsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 30, 5));
-
-        // Поиск
+        
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 5));
         searchPanel.add(new JLabel("🔍 Поиск:"));
-        searchField = new JTextField(15);  // Уменьшил с 20 до 15
+        searchField = new JTextField(15);
         searchField.setPreferredSize(new Dimension(150, 25));
         searchButton = new JButton("Найти");
         searchPanel.add(searchField);
         searchPanel.add(searchButton);
-
-        // Громкость (горизонтальная, но компактная)
+        
         JPanel volumePanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 5));
-        volumePanel.add(new JLabel("🔊"));
+        volumePanel.add(new JLabel(""));
         volumeSlider = new JSlider(JSlider.HORIZONTAL, 0, 100, 70);
-        volumeSlider.setPreferredSize(new Dimension(120, 25));  // Компактный размер
+        volumeSlider.setPreferredSize(new Dimension(120, 25));
         volumePanel.add(volumeSlider);
-
+        
         topControlsPanel.add(searchPanel);
         topControlsPanel.add(volumePanel);
-
         bottomPanel.add(topControlsPanel);
-
-        // === Строка 2: Прогресс бар (на всю ширину) ===
+        
+        // Строка 2: Прогресс бар
         JPanel progressPanel = new JPanel(new BorderLayout(10, 0));
-        progressPanel.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
-
+        
         progressBar = new JProgressBar(0, 100);
         progressBar.setStringPainted(true);
         progressBar.setToolTipText("Кликните для перемотки");
-        progressBar.setPreferredSize(new Dimension(0, 25));  // Фиксированная высота
         progressPanel.add(progressBar, BorderLayout.CENTER);
-
+        
         progressLabel = new JLabel("0:00 / 0:00", SwingConstants.CENTER);
         progressLabel.setFont(new Font("Arial", Font.PLAIN, 11));
         progressPanel.add(progressLabel, BorderLayout.EAST);
-
+        
         bottomPanel.add(progressPanel);
-
-        // === Строка 3: Кнопки управления (2 ряда) ===
+        
+        // Строка 3: Кнопки управления
         JPanel buttonsPanel = new JPanel(new GridLayout(2, 1, 5, 5));
-
-        // Ряд 1: Основные кнопки
+        
         JPanel mainButtonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 5));
         prevButton = new JButton("⏮ Prev");
         playButton = new JButton("▶ Play");
         pauseButton = new JButton("⏸ Pause");
         stopButton = new JButton("■ Stop");
         nextButton = new JButton("⏭ Next");
-
+        
         mainButtonsPanel.add(prevButton);
         mainButtonsPanel.add(playButton);
         mainButtonsPanel.add(pauseButton);
         mainButtonsPanel.add(stopButton);
         mainButtonsPanel.add(nextButton);
-
-        // Ряд 2: Чекбоксы
+        
         JPanel optionsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 30, 2));
         shuffleCheckBox = new JCheckBox("🔀 Перемешать");
         repeatCheckBox = new JCheckBox("🔁 Повтор");
-
+        
         optionsPanel.add(shuffleCheckBox);
         optionsPanel.add(repeatCheckBox);
-
+        
         buttonsPanel.add(mainButtonsPanel);
         buttonsPanel.add(optionsPanel);
-
         bottomPanel.add(buttonsPanel);
-
+        
         mainPanel.add(bottomPanel, BorderLayout.SOUTH);
-
+        
         add(mainPanel);
-
+        
         JPanel statusBar = new JPanel(new FlowLayout(FlowLayout.LEFT));
         statusBar.add(new JLabel("Готов к работе"));
         add(statusBar, BorderLayout.SOUTH);
-
+        
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
@@ -218,34 +212,31 @@ public class MP3PlayerUI extends JFrame {
     
     private void initMusicPlayer() {
         musicPlayer = new MusicPlayer();
-
+        
         displayScreen = new DisplayScreen();
         historyLogger = new PlaybackHistoryLogger();
         trayNotifier = new SystemTrayNotifier();
-
+        
         musicPlayer.addObserver(displayScreen);
         musicPlayer.addObserver(historyLogger);
         musicPlayer.addObserver(trayNotifier);
-
-        // Инициализация клиента для сервера
+        
         serverClient = new ServerClient();
         remotePlaylist = new ArrayList<>();
         userPlaylists = new ArrayList<>();
-
-        // GUI-наблюдатель для обновления интерфейса
+        
         musicPlayer.addObserver(new MusicPlaybackObserver() {
             @Override
             public void onPlaybackStarted(String songName, String artist, int duration) {
                 SwingUtilities.invokeLater(() -> {
                     if (progressBar != null && nowPlayingLabel != null) {
-                        // Используем songName как есть (он уже содержит красивое название)
                         nowPlayingLabel.setText(songName);
                         progressBar.setMaximum(duration);
                         progressBar.setValue(0);
                     }
                 });
             }
-
+            
             @Override
             public void onPlaybackStopped() {
                 SwingUtilities.invokeLater(() -> {
@@ -254,7 +245,7 @@ public class MP3PlayerUI extends JFrame {
                     }
                 });
             }
-
+            
             @Override
             public void onPlaybackFinished() {
                 SwingUtilities.invokeLater(() -> {
@@ -264,7 +255,7 @@ public class MP3PlayerUI extends JFrame {
                     playNext();
                 });
             }
-
+            
             @Override
             public void onVolumeChanged(int volume) {
                 SwingUtilities.invokeLater(() -> {
@@ -273,16 +264,15 @@ public class MP3PlayerUI extends JFrame {
                     }
                 });
             }
-
+            
             @Override
             public void onProgressChanged(int progress, int duration) {
                 SwingUtilities.invokeLater(() -> {
                     if (progressBar != null && progressLabel != null && topTimeLabel != null && duration > 0) {
                         String timeText = formatTime(progress) + " / " + formatTime(duration);
-
                         progressBar.setValue(progress);
-                        progressLabel.setText(timeText);  // Нижняя метка
-                        topTimeLabel.setText(timeText);   // Верхняя метка
+                        progressLabel.setText(timeText);
+                        topTimeLabel.setText(timeText);
                     }
                 });
             }
@@ -335,6 +325,7 @@ public class MP3PlayerUI extends JFrame {
                 int selectedIndex = playlistList.getSelectedIndex();
                 if (selectedIndex >= 0) {
                     currentSongIndex = selectedIndex;
+                    loadAlbumCover(playlist.get(selectedIndex));
                 }
             }
         });
@@ -352,7 +343,6 @@ public class MP3PlayerUI extends JFrame {
         serverPanel.setBorder(BorderFactory.createTitledBorder("🌐 Стриминговый сервер"));
         serverPanel.setPreferredSize(new Dimension(320, 0));
         
-        // Статус подключения
         JPanel statusPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 5));
         serverStatusLabel = new JLabel("🔴 Не подключен");
         serverStatusLabel.setForeground(Color.RED);
@@ -364,7 +354,6 @@ public class MP3PlayerUI extends JFrame {
         statusPanel.add(serverStatusLabel);
         serverPanel.add(statusPanel, BorderLayout.NORTH);
         
-        // Поиск на сервере
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 5));
         serverSearchField = new JTextField(10);
         serverSearchButton = new JButton("🔍");
@@ -377,7 +366,6 @@ public class MP3PlayerUI extends JFrame {
         searchPanel.add(serverSearchButton);
         serverPanel.add(searchPanel, BorderLayout.CENTER);
         
-        // Список треков на сервере
         remotePlaylistModel = new DefaultListModel<>();
         remotePlaylistList = new JList<>(remotePlaylistModel);
         remotePlaylistList.setFont(new Font("Monospaced", Font.PLAIN, 12));
@@ -394,12 +382,11 @@ public class MP3PlayerUI extends JFrame {
         remoteScroll.setBorder(BorderFactory.createTitledBorder("Треки на сервере"));
         serverPanel.add(remoteScroll, BorderLayout.CENTER);
         
-        // Кнопки действий (2 ряда)
         JPanel actionsPanel = new JPanel(new GridLayout(2, 1, 5, 5));
         
         JPanel topButtons = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 5));
-        downloadButton = new JButton("⬇ Скачать");
-        uploadButton = new JButton("⬆ Загрузить");
+        downloadButton = new JButton(" Скачать");
+        uploadButton = new JButton(" Загрузить");
         
         downloadButton.addActionListener(e -> downloadSelectedTrack());
         uploadButton.addActionListener(e -> uploadLocalTrack());
@@ -426,7 +413,10 @@ public class MP3PlayerUI extends JFrame {
         playlistsPanel.setBorder(BorderFactory.createTitledBorder("📁 Мои плейлисты"));
         playlistsPanel.setPreferredSize(new Dimension(250, 0));
         
-        // Кнопки управления
+        // Основной контейнер для плейлистов и обложки
+        JPanel contentPanel = new JPanel(new BorderLayout(0, 10));
+        
+        // Кнопки управления плейлистами
         JPanel buttonsPanel = new JPanel();
         buttonsPanel.setLayout(new BoxLayout(buttonsPanel, BoxLayout.Y_AXIS));
         
@@ -458,7 +448,7 @@ public class MP3PlayerUI extends JFrame {
         buttonsPanel.add(Box.createRigidArea(new Dimension(0, 5)));
         buttonsPanel.add(addSongToPlaylistButton);
         
-        playlistsPanel.add(buttonsPanel, BorderLayout.NORTH);
+        contentPanel.add(buttonsPanel, BorderLayout.NORTH);
         
         // Список плейлистов
         playlistsModel = new DefaultListModel<>();
@@ -474,12 +464,30 @@ public class MP3PlayerUI extends JFrame {
             }
         });
         JScrollPane playlistsScroll = new JScrollPane(playlistsList);
-        playlistsPanel.add(playlistsScroll, BorderLayout.CENTER);
+        playlistsScroll.setPreferredSize(new Dimension(0, 120));
+        contentPanel.add(playlistsScroll, BorderLayout.CENTER);
         
+        // === Обложка альбома (под плейлистами) ===
+        JPanel coverPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 5));
+        coverPanel.setBorder(new TitledBorder("Обложка"));
+        
+        albumCoverLabel = new JLabel();
+        albumCoverLabel.setPreferredSize(new Dimension(200, 200));
+        albumCoverLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        albumCoverLabel.setVerticalAlignment(SwingConstants.CENTER);
+        albumCoverLabel.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200), 1));
+        albumCoverLabel.setBackground(new Color(50, 50, 50));
+        albumCoverLabel.setOpaque(true);
+        
+        albumCoverLabel.setText("Нет обложки");
+        albumCoverLabel.setForeground(Color.GRAY);
+        
+        coverPanel.add(albumCoverLabel);
+        contentPanel.add(coverPanel, BorderLayout.SOUTH);
+        
+        playlistsPanel.add(contentPanel, BorderLayout.CENTER);
         add(playlistsPanel, BorderLayout.WEST);
     }
-    
-    // === Методы работы с сервером ===
     
     private void toggleServerConnection() {
         if (serverConnected) {
@@ -501,13 +509,13 @@ public class MP3PlayerUI extends JFrame {
             .thenAccept(available -> SwingUtilities.invokeLater(() -> {
                 if (available) {
                     serverConnected = true;
-                    serverStatusLabel.setText("🟢 Подключен");
+                    serverStatusLabel.setText(" Подключен");
                     serverStatusLabel.setForeground(new Color(0, 150, 0));
                     connectButton.setText("✖ Отключиться");
                     loadRemoteTracks();
                     loadUserPlaylists();
                 } else {
-                    serverStatusLabel.setText("❌ Ошибка");
+                    serverStatusLabel.setText(" Ошибка");
                     serverStatusLabel.setForeground(Color.RED);
                     JOptionPane.showMessageDialog(this, 
                         "Сервер не отвечает. Запустите MusicServer.java",
@@ -546,21 +554,15 @@ public class MP3PlayerUI extends JFrame {
     
     private void loadUserPlaylists() {
         if (!serverConnected) return;
-
+        
         serverClient.fetchPlaylists()
             .thenAccept(playlists -> SwingUtilities.invokeLater(() -> {
                 playlistsModel.clear();
                 userPlaylists.clear();
-
+                
                 for (ServerClient.RemotePlaylistInfo playlist : playlists) {
                     userPlaylists.add(playlist);
                     playlistsModel.addElement(playlist);
-                }
-
-                // Если плейлистов нет, просто оставляем список пустым
-                // ИЛИ добавляем заглушку:
-                if (playlists.isEmpty()) {
-                    // playlistsModel.addElement(new ServerClient.RemotePlaylistInfo("(нет плейлистов)", ""));
                 }
             }))
             .exceptionally(ex -> {
@@ -750,7 +752,7 @@ public class MP3PlayerUI extends JFrame {
                 .exceptionally(ex -> {
                     SwingUtilities.invokeLater(() -> 
                         JOptionPane.showMessageDialog(this, 
-                            "❌ Ошибка: " + ex.getMessage(), 
+                            " Ошибка: " + ex.getMessage(), 
                             "Ошибка", 
                             JOptionPane.ERROR_MESSAGE)
                     );
@@ -758,8 +760,6 @@ public class MP3PlayerUI extends JFrame {
                 });
         }
     }
-    
-    // === Методы работы с плейлистами ===
     
     private void createNewPlaylist() {
         if (!serverConnected) {
@@ -876,7 +876,7 @@ public class MP3PlayerUI extends JFrame {
                 }))
                 .exceptionally(ex -> {
                     JOptionPane.showMessageDialog(this, 
-                        "❌ Ошибка: " + ex.getMessage(), 
+                        " Ошибка: " + ex.getMessage(), 
                         "Ошибка", 
                         JOptionPane.ERROR_MESSAGE);
                     return null;
@@ -944,9 +944,7 @@ public class MP3PlayerUI extends JFrame {
                         "✅ Трек добавлен в плейлист \"" + playlist.getName() + "\"",
                         "Успех", JOptionPane.INFORMATION_MESSAGE);
 
-                    // === ДОБАВЛЕНО: Обновляем список плейлистов ===
                     loadUserPlaylists();
-                    // ===============================================
                 } else {
                     JOptionPane.showMessageDialog(this, 
                         "❌ Ошибка добавления трека", "Ошибка", JOptionPane.ERROR_MESSAGE);
@@ -974,12 +972,10 @@ public class MP3PlayerUI extends JFrame {
                 currentSongIndex = -1;
 
                 for (ServerClient.RemoteSongInfo remoteSong : songs) {
-                    // ИСПРАВЛЕНИЕ: Используем красивое название из toString()
-                    String beautifulName = remoteSong.toString(); // "Artist - Title [MM:SS]"
+                    String beautifulName = remoteSong.toString();
 
-                    // Создаём Song с красивым названием
                     Song localSong = new Song(
-                        beautifulName,  // <-- Красивое название
+                        beautifulName,
                         remoteSong.getArtist(),
                         remoteSong.getDuration(),
                         serverClient.getStreamUrl(remoteSong.getId())
@@ -1015,27 +1011,22 @@ public class MP3PlayerUI extends JFrame {
     }
     
     private void playRemoteTrack(ServerClient.RemoteSongInfo remote) {
-        // Создаём локальную модель для плеера с URL стриминга
         Song local = new Song(
-            remote.getTitle(), 
-            remote.getArtist(), 
-            remote.getDuration(), 
+            remote.toString(),
+            remote.getArtist(),
+            remote.getDuration(),
             serverClient.getStreamUrl(remote.getId())
         );
         
-        // Воспроизводим через MusicPlayer
         musicPlayer.play(local);
-        
-        // Обновляем UI
         currentSongIndex = -1;
         nowPlayingLabel.setText(remote.toString());
         
-        System.out.println("[UI] ▶ Стриминг: " + remote.toString());
-        System.out.println("[UI] URL: " + serverClient.getStreamUrl(remote.getId()));
+        loadAlbumCover(local);
     }
     
     private void setupProgressBarHandlers() {
-        if (progressBar == null) return;  // <-- Защита от NPE
+        if (progressBar == null) return;
 
         progressBar.addMouseListener(new MouseAdapter() {
             @Override
@@ -1260,6 +1251,100 @@ public class MP3PlayerUI extends JFrame {
             }
         });
         progressTimer.start();
+    }
+    
+    /**
+     * Извлечь обложку альбома из MP3 файла
+     */
+    private void loadAlbumCover(Song song) {
+        if (song == null) return;
+
+        // Показываем индикатор загрузки
+        SwingUtilities.invokeLater(() -> {
+            albumCoverLabel.setText("Загрузка...");
+            albumCoverLabel.setIcon(null);
+            albumCoverLabel.setForeground(Color.GRAY);
+        });
+
+        // Запускаем в отдельном потоке
+        new Thread(() -> {
+            try {
+                String filePath = song.getFilePath();
+                System.out.println("[COVER] Загрузка обложки: " + filePath);
+
+                // Если это стриминг с сервера
+                if (filePath.startsWith("http://") || filePath.startsWith("stream:")) {
+                    System.out.println("[COVER] Стриминг - обложка недоступна");
+                    SwingUtilities.invokeLater(() -> {
+                        albumCoverLabel.setText("Стриминг");
+                        albumCoverLabel.setForeground(Color.BLUE);
+                    });
+                    return;
+                }
+
+                java.io.File file = new java.io.File(filePath);
+                if (!file.exists()) {
+                    System.err.println("[COVER] Файл не найден: " + filePath);
+                    SwingUtilities.invokeLater(() -> {
+                        albumCoverLabel.setText("Файл не найден");
+                        albumCoverLabel.setForeground(Color.RED);
+                    });
+                    return;
+                }
+
+                // Читаем теги MP3
+                org.jaudiotagger.audio.AudioFile audioFile = 
+                    org.jaudiotagger.audio.AudioFileIO.read(file);
+
+                org.jaudiotagger.tag.Tag tag = audioFile.getTag();
+                if (tag == null) {
+                    System.out.println("[COVER] Теги не найдены");
+                    SwingUtilities.invokeLater(() -> {
+                        albumCoverLabel.setText("Нет тегов");
+                        albumCoverLabel.setForeground(Color.GRAY);
+                    });
+                    return;
+                }
+
+                // Пытаемся получить обложку
+                var artwork = tag.getFirstArtwork();
+
+                if (artwork != null) {
+                    byte[] imageBytes = artwork.getBinaryData();
+                    System.out.println("[COVER] Найдена обложка: " + imageBytes.length + " байт");
+
+                    // Создаём ImageIcon
+                    ImageIcon coverIcon = new ImageIcon(imageBytes);
+
+                    // Масштабируем изображение до 200x200
+                    Image scaledImage = coverIcon.getImage().getScaledInstance(200, 200, Image.SCALE_SMOOTH);
+                    ImageIcon scaledIcon = new ImageIcon(scaledImage);
+
+                    // Устанавливаем на label
+                    SwingUtilities.invokeLater(() -> {
+                        albumCoverLabel.setIcon(scaledIcon);
+                        albumCoverLabel.setText("");
+                        albumCoverLabel.setForeground(null);
+                        albumCoverLabel.repaint();
+                        albumCoverLabel.revalidate();
+                    });
+                } else {
+                    System.out.println("[COVER] Обложка не найдена");
+                    SwingUtilities.invokeLater(() -> {
+                        albumCoverLabel.setText("Нет обложки");
+                        albumCoverLabel.setForeground(Color.GRAY);
+                    });
+                }
+
+            } catch (Exception e) {
+                System.err.println("[COVER] Ошибка: " + e.getMessage());
+                e.printStackTrace();
+                SwingUtilities.invokeLater(() -> {
+                    albumCoverLabel.setText("Ошибка");
+                    albumCoverLabel.setForeground(Color.RED);
+                });
+            }
+        }).start();
     }
     
     private String formatTime(int seconds) {
